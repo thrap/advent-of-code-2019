@@ -1,48 +1,25 @@
 import run from "aocrunner"
 
-const parseInput = rawInput => rawInput.split('-').map(x => +x)
-
-const part1 = (rawInput) => {
-  const [min, max] = parseInput(rawInput)
-  let count = 0;
+const count = (input, test) => {
+  const [min, max] = input.split('-').map(x => +x)
   const rec = (x, num) => {
     if (num.length === 6) {
-      if (num >= min && num <= max && /(\d)\1/.test(num)) {
-        count++;
-      }
-      return;
+      return num >= min && num <= max && test(num)
     }
+    let count = 0
     for (let i = x; i<=9; i++) {
-      rec(i, num+i);
+      count += rec(i, num+i);
     }
+    return count
   }
-
-  rec(0, "");
-  console.log(count)
-
-  return count
+  return rec(0, '')
 }
 
-const part2 = (rawInput) => {
-  const input = parseInput(rawInput)
-
-  return
-}
-
-const part1Input = ``
-const part2Input = part1Input
 run({
   part1: {
-    tests: [
-      { input: part1Input, expected: '' },
-    ],
-    solution: part1,
+    solution: (input) => count(input, (s) => /(\d)\1/.test(s)),
   },
   part2: {
-    tests: [
-      { input: part2Input, expected: '' },
-    ],
-    solution: part2,
+    solution: (input) => count(input, (s) => /(\d)\1/.test(s.replace(/(\d)(\1){2,}/g, ''))),
   },
-  onlyTests: false,
 })
