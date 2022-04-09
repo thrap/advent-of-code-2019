@@ -11,8 +11,10 @@ const part1 = (input) => {
   return last
 }
 
-const part2 = (rawInput) => {
-  return
+const part2 = (input) => {
+  const machine = new Intcode(input);
+  machine.setNextInput(5)
+  return machine.nextOutput()
 }
 
 run({
