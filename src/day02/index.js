@@ -1,6 +1,6 @@
 import run from "aocrunner"
 
-const parseInput = input => [...input.split(",").map(x => +x)]
+const parse = input => [...input.split(",").map(x => +x)]
 
 const f = (i, arr) => {
   const [a,b,c,d] = arr.slice(i)
@@ -14,17 +14,23 @@ const f = (i, arr) => {
   return f(i+4, arr)
 }
 
-const part1 = (rawInput) => {
-  const input = parseInput(rawInput)
-  input[1] = 12
-  input[2] = 2
-  return f(0, input)
+const g = (arr, noun, verb) => {
+  arr[1] = noun;
+  arr[2] = verb;
+  return f(0, arr);
 }
 
-const part2 = (rawInput) => {
-  const input = parseInput(rawInput)
+const part1 = (input) => g(parse(input), 12, 2)
 
-  return
+const part2 = (input) => {
+  const arr = parse(input)
+  for(let i = 0; i < 100; i++) {
+    for(let j = 0; j < 100; j++) {
+      if (g([...arr], i, j) == 19690720) {
+        return 100*i+ j
+      }
+    }
+  }
 }
 
 run({
