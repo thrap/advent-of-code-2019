@@ -1,24 +1,7 @@
 import run from "aocrunner"
 import Intcode from "../utils/intcode.js"
 
-const print = (maze) => {
-  const coords = Object.keys(maze).map(x => x.split(","))
-  const xs = coords.map(v => v[0]);
-  const ys = coords.map(v => v[1]);
-
-  const minX = Math.min(...xs);
-  const maxX = Math.max(...xs);
-  const minY = Math.min(...ys);
-  const maxY = Math.max(...ys);
-
-  const arr = Array(maxY - minY+1).fill(1).map(x => Array(maxX - minX+1).fill(' '));
-  coords.forEach(([x, y]) => {
-    arr[maxY-y][maxX-x] = maze[[x,y]]
-  })
-  console.log(arr.map(line => line.join("")).join('\n'))
-}
-
-const part1 = (program) => {
+const map = (program) => {
   const machine = new Intcode(program)
   const maze = {}
 
@@ -32,7 +15,7 @@ const part1 = (program) => {
     machine.setNextInput(reverse[dir])
     machine.nextOutput()
   }
-  const rec = (x, y, steps) => {
+  const explore = (x, y, steps) => {
     if (!tested[[x, y]]) {
       tested[[x, y]] = new Set()
     }
@@ -47,26 +30,46 @@ const part1 = (program) => {
       const out = machine.nextOutput()
       if (out == 0) {
         maze[[x+dx,y+dy]] = '#'
-      } else if (out == 1) {
-        maze[[x+dx,y+dy]] = '.'
-        rec(x + dx, y + dy, steps + 1)
-        backTrack(dir)
-      } else if (out == 2) {
-        maze[[x+dx,y+dy]] = '@'
-        backTrack(dir)
-        min = Math.min(min, steps + 1)
-        return steps + 1
+        continue
       }
+      if (out == 1) {
+        maze[[x+dx,y+dy]] = '.'
+      } else {
+        maze[[x+dx,y+dy]] = 'O'
+        min = Math.min(min, steps + 1)
+      }
+      explore(x + dx, y + dy, steps + 1)
+      backTrack(dir)
     }
   }
-  rec(0, 0, 0)
+  explore(0, 0, 0)
 
-  print(maze)
+  return [min, maze]
+}
 
-  return min
+const part1 = (program) => {
+  return map(program)[0]
 }
 
 const part2 = (program) => {
+  const maze = map(program)[1]
+  const start = Object.keys(maze).find(x => maze[x] == 'O').split(',').map(c => +c)
+
+  const queue = [[start,0]]
+  const dirs = [[0, 1],[-1,0],[0,-1],[1,0]]
+  var max = 0
+  while(queue.length) {
+    const [[x, y], steps] = queue.shift()
+    max = Math.max(max, steps)
+    dirs.forEach(([dx, dy]) => {
+      const pos = [x + dx, y + dy]
+      if (maze[pos] == '.') {
+        maze[pos] = 'O'
+        queue.push([pos, steps+1])
+      }
+    })
+  }
+  return max
 }
 
 run({
