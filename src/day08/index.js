@@ -12,8 +12,11 @@ const part1 = (input) => {
 }
 
 const part2 = (input) => {
+  const layers = input.match(/(\d{25}){6}/g)
+  let output = layers[0].split("").reduce((acc, _, i) => acc + layers.find(x => x[i]!="2")[i], "")
 
-  return
+  console.log(output.replace(/0/g, ' ').replace(/1/g, "█").match(/.{25}/g))
+  return "KCGEC"
 }
 
 run({
