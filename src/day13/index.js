@@ -3,34 +3,53 @@ import Intcode from "../utils/intcode.js"
 
 const part1 = (program) => {
   const machine = new Intcode(program)
-  let count = 0;
+  let count = 0
   while (!machine.isStopped) {
-      const x = machine.nextOutput()
-      const y = machine.nextOutput()
-      const id = machine.nextOutput()
-      count += id == 2
+    const x = machine.nextOutput()
+    const y = machine.nextOutput()
+    const id = machine.nextOutput()
+    count += id == 2
   }
   return count
 }
 
-const part2 = (rawInput) => {
-  return
+const part2 = (program) => {
+  const machine = new Intcode(2+program.slice(1))
+  const board = [...Array(25)].map(_ => [])
+  var pos = []
+  var paddleX
+  var paddleY
+  while (!machine.isStopped) {
+    const x = machine.nextOutput()
+    const y = machine.nextOutput()
+    const id = machine.nextOutput()
+
+    if (x != -1) {
+      if (y == undefined) {
+        return x
+      }
+      board[y][x] = id
+    }
+    if (id == 3) {
+      paddleX = x
+      paddleY = y
+    }
+    if (id == 4) {
+      if (y == paddleY-1 && x == paddleX) {
+        machine.setNextInput(0)
+      } else {
+        machine.setNextInput(Math.sign(x - paddleX))
+      }
+      pos.push(x)
+    }
+  }
 }
 
-const part1Input = ``
-const part2Input = part1Input
 run({
   part1: {
-    tests: [
-      { input: part1Input, expected: '' },
-    ],
     solution: part1,
   },
   part2: {
-    tests: [
-      { input: part2Input, expected: '' },
-    ],
     solution: part2,
   },
-  onlyTests: false,
 })
