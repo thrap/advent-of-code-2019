@@ -2,7 +2,7 @@ const Intcode = function(input, debug=false) {
   let index = 0;
   let arr = [...input.split(",").map(x => +x)];
   let lastOutput = 0;
-  let last = null;
+  let inputs = []
   let relativeBase = 0;
   this.isStopped = false;
   let isTempStopped = false;
@@ -68,17 +68,17 @@ const Intcode = function(input, debug=false) {
       set(d, B * C);
       return f(i + 4);
     } else if (opcode == 3) {
-      if (last === null) {
+      if (inputs.length == 0) {
         throw "Trenger input"
       }
+      let input = inputs.shift()
       if (debug)
-        console.log("Input", last);
+        console.log("Input", input);
 
       if (mode1 == 2)
-        arr[relativeBase+b] = last;
+        arr[relativeBase+b] = input;
       else
-        arr[b] = last;
-      last = null;
+        arr[b] = input;
 
       return f(i+2);
     } else if (opcode == 4) {
@@ -133,7 +133,7 @@ const Intcode = function(input, debug=false) {
   }
 
   this.setNextInput = (input) => {
-    last = input;
+    inputs.push(input)
   }
 }
 export default Intcode
