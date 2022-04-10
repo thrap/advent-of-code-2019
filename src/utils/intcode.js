@@ -134,6 +134,7 @@ const Intcode = function(input, debug=false) {
 
   this.setNextInput = (input) => {
     inputs.push(input)
+    return this
   }
 }
 export default Intcode
