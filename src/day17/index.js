@@ -29,7 +29,7 @@ const part2 = (program) => {
   const robot = new Intcode(2+program.slice(1))
 
   const input = (input) => {
-    robot.input(((input+'\n').split('')).map(x => x.charCodeAt(0)))
+    robot.inputAscii(input)
   }
 
   input('A,A,B,C,C,A,C,B,C,B')
