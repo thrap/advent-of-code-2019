@@ -22,6 +22,36 @@ const part1 = (program) => {
 }
 
 const part2 = (program) => {
+  const computers = [...Array(50)].map((_,i) => new Intcode(program).input([i,-1]))
+
+  var ans = 0
+
+  var last = -Infinity
+  var nat = []
+  for (var j = 0; !ans; j++) {
+    var transmitted = false
+    computers.forEach(computer => {
+      const output = computer.output()
+      for (var i = 0; i < output.length-1; i+=3) {
+        const [addr, x, y] = output.slice(i)
+        if (addr == 255) {
+          nat = [x, y]
+        } else {
+          transmitted = true
+          computers[addr].input([x,y])
+        }
+      }
+    })
+    if (!transmitted) {
+      const y = nat[1]
+      if (last == y) {
+        return y
+      }
+      last = y
+      computers[0].input(nat)
+    }
+  }
+  return ans
 }
 
 run({
