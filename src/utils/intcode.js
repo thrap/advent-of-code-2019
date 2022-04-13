@@ -153,6 +153,7 @@ const Intcode = function(input, debug=false) {
 
   this.inputAscii = (str) => {
     this.input(((str+'\n').split('')).map(x => x.charCodeAt(0)))
+    return this
   }
 }
 export default Intcode
