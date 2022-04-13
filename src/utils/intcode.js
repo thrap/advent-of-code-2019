@@ -6,6 +6,7 @@ const Intcode = function(input, debug=false) {
   let relativeBase = 0;
   this.isStopped = false;
   let isTempStopped = false;
+  let needsInput = false
 
   let calls = 0;
   const f = (i) => {
@@ -17,26 +18,19 @@ const Intcode = function(input, debug=false) {
     }
     isTempStopped = false;
 
-    let [a,b,c,d] = [arr[i], arr[i+1], arr[i+2], arr[i+3]]
+    let a = arr[i]
+    let b = arr[i+1]
+    let c = arr[i+2]
+    let d = arr[i+3]
 
-    let [mode3, mode2, mode1] = [0, 0, 0];
-    const A = a;
-    while (a > 10000) {
-      mode3 += 1;
-      a -= 10000;
-    }
-    while (a > 1000) {
-      mode2 += 1;
-      a -= 1000;
-    }
-    while (a > 100) {
-      mode1 += 1;
-      a -= 100;
-    }
-    //console.log(mode1,mode2,mode3)
+    let mode3 = Math.floor(a/10000)
+    a %= 10000
+    let mode2 = Math.floor(a/1000)
+    a %= 1000
+    let mode1 = Math.floor(a/100)
+    a %= 100
 
-    const opcode = a % 100;
-    //console.log(A,b,c,d)
+    const opcode = a
 
     const getValue = (mode, val) => {
       switch(mode) {
@@ -50,9 +44,9 @@ const Intcode = function(input, debug=false) {
 
     const set = (k, val) => {
       if (mode3 == 2)
-          arr[relativeBase+k] = val;
-        else
-          arr[k] = val;
+        arr[relativeBase+k] = val;
+      else
+        arr[k] = val;
     }
 
     if (opcode == 99 || i > arr.length) {
@@ -69,7 +63,8 @@ const Intcode = function(input, debug=false) {
       return f(i + 4);
     } else if (opcode == 3) {
       if (inputs.length == 0) {
-        throw "Trenger input"
+        needsInput = true
+        return
       }
       let input = inputs.shift()
       if (debug)
@@ -103,20 +98,31 @@ const Intcode = function(input, debug=false) {
       set(d, B == C ? 1 : 0);
       return f(i+4, arr)
     } else if (opcode == 9) {
-      //console.log("WAT")
       relativeBase += B;
-      //console.log(relativeBase)
       return f(i+2, arr);
     } else {
-      console.log("Unknown: " + opcode);
-      return;
+      throw "Unknown: " + opcode
     }
-
-    throw 1
   }
 
   this.start = () => {
     f(index);
+  }
+
+  this.output = () => {
+    const arr = []
+    while(!needsInput && !this.isStopped) {
+      arr.push(this.nextOutput())
+    }
+    return arr
+  }
+
+  this.outputAscii = () => {
+    return this.output().map(x => String.fromCharCode(x)).join('')
+  }
+
+  this.exitCode = () => {
+    return lastOutput
   }
 
   this.nextOutput = () => {
@@ -128,12 +134,20 @@ const Intcode = function(input, debug=false) {
     while(isTempStopped) {
       f(index)
     }
-    index += 2;
+    if (!needsInput)
+      index += 2;
     return lastOutput;
   }
 
   this.setNextInput = (input) => {
+    needsInput = false
     inputs.push(input)
+    return this
+  }
+
+  this.input = (arr) => {
+    needsInput = false
+    inputs.push(...arr)
     return this
   }
 }
