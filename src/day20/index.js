@@ -2,18 +2,19 @@ import run from "aocrunner"
 
 const parseInput = rawInput => rawInput.split('\n').map(l => l.split(''))
 
-const print = (maze, diff = {}) => {
-  console.log(maze.map((l,i) => l.map((c,j) => diff[[i,j]] || c).join('')).join('\n'));
-}
-
 const dirs = [[0, 1],[-1,0],[0,-1],[1,0]]
 
-const part1 = (rawInput) => {
+const parse = (rawInput) => {
   const maze = parseInput(rawInput)
+
+  const jLength = Math.max(...maze.map(x => x.length))
+
+  const isOuter = ([i, j]) => i == 2 || i == maze.length-3 || j == 2 || j == jLength-3
+  const toPortal = pos => pos.concat([isOuter(pos) ? 1 : -1])
 
   const portals = {}
   for (let i = 0; i < maze.length; i++) {
-    for (let j = 0; j < maze[0].length; j++) {
+    for (let j = 0; j < maze[i].length; j++) {
       if (/[A-Z]/.test(maze[i][j])) {
         const [di, dj] = /[A-Z]/.test(maze[i][j+1]) ? [0, 1] : [1, 0]
         const portal = maze[i][j] + maze[i+di][j+dj]
@@ -23,95 +24,57 @@ const part1 = (rawInput) => {
         if (maze[i-di]?.[j-dj] == '.') {
           maze[i][j] = '@'
           maze[i+di][j+dj] = ' '
-          portals[portal].push([i-di, j-dj])
+          portals[portal].push(toPortal([i-di, j-dj]))
         } else {
           maze[i][j] = ' '
           maze[i+di][j+dj] = '@'
-          portals[portal].push([i+2*di, j+2*dj])
+          portals[portal].push(toPortal([i+2*di, j+2*dj]))
         }
       }
     }
   }
+
   const portal = Object.values(portals).filter(x => x.length == 2).reduce((acc, [a, b]) => ({
-    [a]: b,
-    [b]: a,
+    [a.slice(0,2)]: b,
+    [b.slice(0,2)]: a,
     ...acc
   }), {})
 
+  return [maze, portal, portals['AA'][0], portals['ZZ'][0]]
+}
+
+const bfs = (input, part2) => {
+  const [maze, portal, start, goal] = parse(input)
+
   const visited = {}
-  const bfs = () => {
-    const queue = [[start, 0]]
-    while (queue.length) {
-      const [pos, moves] = queue.shift()
-      if (pos[0] == goal[0] && pos[1] == goal[1]) {
-        return moves
-      }
-      if (visited[pos]) {
-        continue
-      }
-      visited[pos] = true
-      if (portal[pos]) {
-        queue.push([portal[pos], moves+1])
-      }
-      const [i, j] = pos
-      dirs.forEach(([di, dj]) => {
-        if (maze[i+di]?.[j+dj] == '.') {
-          queue.push([[i+di, j+dj], moves+1])
-        }
-      })
+  const queue = [[start[0], start[1], 0, 0]]
+  while (queue.length) {
+    const [i, j, depth, moves] = queue.shift()
+    if (depth < 0) continue
+    if (i == goal[0] && j == goal[1] && depth == 0) {
+      return moves
     }
+    if (visited[[i, j, depth]]) {
+      continue
+    }
+    visited[[i, j, depth]] = true
+    if (portal[[i, j]]) {
+      const [newI, newJ, ddepth] = portal[[i, j]]
+      queue.push([newI, newJ, depth + (part2 ? ddepth : 0), moves+1])
+    }
+    dirs.forEach(([di, dj]) => {
+      if (maze[i+di]?.[j+dj] == '.') {
+        queue.push([i+di, j+dj, depth, moves+1])
+      }
+    })
   }
-
-  const start = portals['AA'][0]
-  const goal = portals['ZZ'][0]
-
-  return bfs()
-
-  const diff = {}
-  diff[start] = 'S'
-  diff[goal] = 'G'
-  print(maze, diff)
-  console.log(start, goal)
-
-  return min
 }
 
-const part2 = (rawInput) => {
-  const input = parseInput(rawInput)
-
-  return
-}
-
-const part1Input = `         A           \n`+
-`         A        \n`+
-`  #######.#########
-  #######.........#
-  #######.#######.#
-  #######.#######.#
-  #######.#######.#
-  #####  B    ###.#
-BC...##  C    ###.#
-  ##.##       ###.#
-  ##...DE  F  ###.#
-  #####    G  ###.#
-  #########.#####.#
-DE..#######...###.#
-  #.#########.###.#
-FG..#########.....#
-  ###########.#####
-             Z
-             Z     `
 run({
   part1: {
-    tests: [
-      { input: part1Input, expected: 23 },
-    ],
-    solution: part1,
+    solution: (input) => bfs(input, false),
   },
   part2: {
-    tests: [
-    ],
-    solution: part2,
+    solution: (input) => bfs(input, true),
   },
-  trimTestInputs: false
 })
